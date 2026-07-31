@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain Relationship Intelligence"
+  short_description: "Turn conversations into durable relationship intelligence"
+  default_prompt: "Use $maintain-relationship-intelligence to ingest these notes and update the relationship system."

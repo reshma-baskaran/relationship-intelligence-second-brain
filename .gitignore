@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.obsidian/workspace*.json
+01_Inbox/
+02_Raw Sources/
+private/
+state/*.json
+
