@@ -1,6 +1,6 @@
 # Relationship Intelligence Second Brain
 
-![Relationship Intelligence Second Brain cover](assets/cover.png)
+![Relationship Intelligence Second Brain cover](assets/cover.svg)
 
 An LLM-maintained Obsidian system that turns client, partner, analyst, vendor, and other strategic conversations into durable relationship history, commitments, interests, and recurring operating briefs.
 
@@ -77,4 +77,3 @@ This public extraction is based on an active Obsidian system with recurring meet
 ## Author
 
 Built by **Reshma Baskaran**, a GTM and growth marketer building practical research, outbound, and knowledge systems.
-
