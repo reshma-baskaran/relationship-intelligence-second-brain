@@ -1,0 +1,20 @@
+{
+  "vault_path": "~/Documents/relationship-intelligence-vault",
+  "input_path": "~/Documents/relationship-notes/inbox",
+  "relationship_types": [
+    "client",
+    "partner",
+    "analyst",
+    "vendor",
+    "community"
+  ],
+  "digest": {
+    "output_directory": "05_Outputs",
+    "default_period": "YYYY-MM"
+  },
+  "privacy": {
+    "store_raw_notes_only_with_permission": true,
+    "redact_before_sharing": true,
+    "keep_credentials_out_of_vault": true
+  }
+}

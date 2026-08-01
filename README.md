@@ -2,7 +2,13 @@
 
 ![Relationship Intelligence Second Brain cover](assets/cover.svg)
 
-An LLM-maintained Obsidian system that turns client, partner, analyst, vendor, and other strategic conversations into durable relationship history, commitments, interests, and recurring operating briefs.
+An Obsidian-compatible, connector-neutral starter kit for turning client,
+partner, analyst, vendor, and other strategic conversations into durable
+relationship history, commitments, interests, and recurring operating briefs.
+
+This is a reusable framework—not a hosted app and not a populated personal
+vault. Fork it, create a private vault from the blank template, and connect
+your own permitted notes.
 
 ## The problem
 
@@ -12,6 +18,8 @@ This system separates immutable sources from maintained knowledge, then turns th
 
 ## What is included
 
+- A 15-minute [quickstart](QUICKSTART.md) and local configuration example.
+- A blank Obsidian vault scaffold created by `scripts/init_vault.py`.
 - A reusable Codex skill for relationship-intelligence ingestion.
 - A source and wiki architecture for Obsidian.
 - Stakeholder, source, theme, and commitment templates.
@@ -19,6 +27,16 @@ This system separates immutable sources from maintained knowledge, then turns th
 - A monthly relationship-digest generator.
 - The transactional contract used by the live meeting-note ingest.
 - Privacy boundaries for public and external use.
+
+## What a fork gives you
+
+After following the quickstart, you have the folders, registers, templates,
+validation rules, and scripts needed to start building your own relationship
+intelligence vault. Your notes remain outside this public repository.
+
+It does not include a ready-made relationship history, fictional account data,
+connector credentials, or automatic Granola, Gmail, Slack, or CRM ingestion.
+Those integrations belong in your private workflow.
 
 ## Architecture
 
@@ -47,6 +65,12 @@ The system originated in my analyst-relations work and is presented here as a br
 
 ## Run the tools
 
+Create a blank vault outside this repository first:
+
+```bash
+python3 scripts/init_vault.py --config relationship-intelligence.config.json
+```
+
 Lint a vault:
 
 ```bash
@@ -72,7 +96,10 @@ Andrej Karpathy described a useful pattern: immutable raw sources, an LLM-mainta
 
 ## Current status
 
-This public extraction is based on an active Obsidian system with recurring meeting-note ingestion and monthly relationship reporting. The public code is connector-neutral; the private data and credentials remain local.
+This public extraction is based on an active Obsidian system with recurring
+meeting-note ingestion and monthly relationship reporting. The public code is
+connector-neutral and is now packaged as a starter kit; private data,
+credentials, and automation state remain local.
 
 ## Author
 

@@ -1,0 +1,6 @@
+# The vault is a local data surface. Keep private material out of Git.
+01_Inbox/
+02_Raw Sources/
+private/
+state/*.json
+.obsidian/workspace*.json
