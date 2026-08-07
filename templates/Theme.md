@@ -3,6 +3,11 @@ type: theme
 status: active
 updated:
 confidence: medium
+evidence_context: internal
+relationship_status: unknown
+privacy: internal
+attribution: review_needed
+source_url:
 sources: []
 ---
 
@@ -17,4 +22,3 @@ sources: []
 ## Relationship implications
 
 ## Open questions
-

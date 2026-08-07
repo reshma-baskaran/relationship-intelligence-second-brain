@@ -26,10 +26,10 @@ def _linked(label: str, url: str) -> str:
 
 def build_digest(rows: list[dict[str, str]], period: str) -> str:
     """Backward-compatible interaction-only renderer used by older callers."""
-    return build_sections(interactions=rows, sources=[], interests=[], commitments=[], period=period)
+    return build_sections(interactions=rows, sources=[], interests=[], themes=[], commitments=[], period=period)
 
 
-def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str, str]], interests: list[dict[str, str]], commitments: list[dict[str, str]], period: str) -> str:
+def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str, str]], interests: list[dict[str, str]], themes: list[dict[str, str]], commitments: list[dict[str, str]], period: str) -> str:
     selected_interactions = [row for row in interactions if value(row, "Date").startswith(period)]
     selected_sources = [row for row in sources if value(row, "Date").startswith(period)]
     health = Counter(value(row, "Health", "RAG") or "Unspecified" for row in selected_interactions)
@@ -87,6 +87,18 @@ def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str
     else:
         lines.append("- No attributed interests recorded.")
 
+    lines.extend(["", "## Maintained themes", ""])
+    selected_themes = [row for row in themes if not value(row, "updated") or value(row, "updated").startswith(period)]
+    if selected_themes:
+        for theme in selected_themes:
+            title = value(theme, "title") or "Untitled theme"
+            context = value(theme, "evidence_context") or "unclassified"
+            synthesis = value(theme, "synthesis") or "Synthesis pending."
+            source_url = value(theme, "source_url")
+            lines.append(f"- **{title}** · `{context}` — {synthesis} — source: {_linked('evidence', source_url)}")
+    else:
+        lines.append("- No maintained themes updated for this period.")
+
     lines.extend(["", "## Open commitments and follow-ups", ""])
     followups = [
         (value(row, "Organization", "Firm"), value(row, "Follow-up", "Follow-up / question"))
@@ -122,10 +134,22 @@ def build_vault_digest(vault: Path, period: str) -> str:
         metadata = frontmatter(path.read_text(encoding="utf-8"))
         metadata["title"] = path.stem
         commitments.append(metadata)
+    themes: list[dict[str, str]] = []
+    for path in (vault / "03_Wiki/themes").glob("*.md") if (vault / "03_Wiki/themes").exists() else []:
+        text = path.read_text(encoding="utf-8")
+        metadata = frontmatter(text)
+        metadata["title"] = path.stem
+        marker = "## Current synthesis"
+        if marker in text:
+            remainder = text.split(marker, 1)[1]
+            paragraph = remainder.split("\n## ", 1)[0].strip()
+            metadata["synthesis"] = " ".join(paragraph.split())
+        themes.append(metadata)
     return build_sections(
         interactions=_table(system / "interaction-ledger.md"),
         sources=_table(system / "source-register.md"),
         interests=_table(system / "stakeholder-interest-register.md"),
+        themes=themes,
         commitments=commitments,
         period=period,
     )

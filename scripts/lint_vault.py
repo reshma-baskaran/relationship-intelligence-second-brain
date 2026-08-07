@@ -71,6 +71,12 @@ def lint(root: Path) -> list[str]:
                 _check_enum(problems, label, field, metadata.get(field, ""))
             if metadata.get("evidence_context") == "public_statement" and metadata.get("relationship_status") != "research_only":
                 problems.append(f"{label} public_statement must use relationship_status research_only")
+        if metadata.get("type") == "theme":
+            label = f"theme page {path.relative_to(root)}"
+            for field in ENUMS:
+                _check_enum(problems, label, field, metadata.get(field, ""))
+            if not _is_https(metadata.get("source_url", "")):
+                problems.append(f"{label} lacks a valid HTTPS source_url")
 
     source_register = root / "00_System/source-register.md"
     if source_register.exists():

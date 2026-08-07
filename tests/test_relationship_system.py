@@ -86,6 +86,25 @@ class RelationshipSystemTests(unittest.TestCase):
                 organization="Pipedrive",
             )
             self.assertFalse(result["interaction_created"])
+            themes = vault / "03_Wiki/themes"
+            themes.mkdir(parents=True, exist_ok=True)
+            (themes / "Partner-led customer value.md").write_text(
+                "---\n"
+                "type: theme\n"
+                "status: active\n"
+                "updated: 2026-03-10\n"
+                "confidence: medium\n"
+                "evidence_context: public_statement\n"
+                "relationship_status: research_only\n"
+                "privacy: public\n"
+                "attribution: confirmed\n"
+                "source_url: https://www.pipedrive.com/en/newsroom/example\n"
+                "---\n\n"
+                "# Partner-led customer value\n\n"
+                "## Current synthesis\n\n"
+                "Pipedrive publicly emphasizes partner expertise and customer value.\n",
+                encoding="utf-8",
+            )
             self.assertEqual([], lint_module.lint(vault))
             rendered = digest.build_vault_digest(vault, "2026-03")
         self.assertIn("Pipedrive", rendered)
@@ -93,6 +112,8 @@ class RelationshipSystemTests(unittest.TestCase):
         self.assertIn("No direct interactions", rendered)
         self.assertIn("https://www.pipedrive.com/en/newsroom/example", rendered)
         self.assertIn("partner expertise", rendered)
+        self.assertIn("Maintained themes", rendered)
+        self.assertIn("Partner-led customer value", rendered)
 
     def test_public_source_cannot_claim_active_relationship(self):
         with TemporaryDirectory() as directory:
