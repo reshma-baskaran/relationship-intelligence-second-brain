@@ -25,16 +25,25 @@ complete first-run path.
 
 ## Ingest workflow
 
-1. Identify source type, date, organization, stakeholders, owner, and intended use.
-2. Preserve the raw source without rewriting it.
-3. Create or update a source summary.
-4. Separate confirmed facts, interpretation, recommendation, and unknowns.
-5. Update relevant organization, stakeholder, theme, commitment, and claim pages.
-6. Add one interaction-ledger row with a source link.
-7. Update the stakeholder-interest register only when attribution is clear.
-8. Update the content index and source register.
-9. Append a maintenance-log entry.
-10. Advance automation state only after all required writes succeed.
+1. Identify source type, date, organization, stakeholders, owner, intended use,
+   evidence context, relationship status, privacy, and attribution.
+2. Use only these evidence contexts: `direct_interaction`, `public_statement`,
+   `third_party`, or `internal`.
+3. Classify a public statement as `research_only`; never convert it into an
+   interaction, commitment, relationship claim, or buying signal.
+4. Preserve the raw source without rewriting it. For a local permitted source,
+   use `scripts/ingest_source.py` so the source receives a stable ID, hash,
+   duplicate check, source-bounded summary, and source-register row. Run
+   `--dry-run` first when needed.
+5. Create or update a source summary.
+6. Separate confirmed facts, interpretation, recommendation, and unknowns.
+7. Update relevant organization, stakeholder, theme, commitment, and claim pages.
+8. Add an interaction-ledger row only for `direct_interaction` evidence.
+9. Update the stakeholder-interest register only when attribution is clear;
+   retain evidence context and relationship status on the row.
+10. Update the content index and source register.
+11. Append a maintenance-log entry only after lint passes.
+12. Advance automation state only after all required writes succeed.
 
 For connector-neutral use, accept user-provided Markdown notes or another
 locally exported source format. Keep any Granola, Gmail, Slack, CRM, or other
@@ -54,7 +63,11 @@ For a weekly update, report:
 - relationship risks and unresolved attribution
 - next actions with owners
 
-For a monthly digest, add recurring themes, relationship coverage gaps, next-month engagement priorities, and changes in relationship health.
+For a monthly digest, use the vault root with
+`scripts/generate_relationship_digest.py <vault> --period YYYY-MM`. Keep direct
+relationship activity separate from public and market intelligence, retain
+source links, and add recurring themes, coverage gaps, next-month engagement
+priorities, and changes in relationship health.
 
 ## Safety
 
@@ -64,3 +77,5 @@ For a monthly digest, add recurring themes, relationship coverage gaps, next-mon
 - Do not expose private transcripts, commercial terms, contact data, or internal product details.
 - Do not send messages or write to CRM from an ingest task.
 - If the source connector fails before returning stable source IDs, do not advance state.
+- Never label a public executive statement as a direct relationship, ask,
+  commitment, or permission to contact.

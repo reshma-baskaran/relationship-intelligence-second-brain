@@ -2,6 +2,10 @@
 type: stakeholder
 organization:
 status: active
+relationship_status: unknown
+evidence_context: internal
+privacy: internal
+attribution: review_needed
 updated:
 confidence: medium
 sources: []
@@ -18,4 +22,3 @@ sources: []
 ## Open commitments
 
 ## Best next engagement
-

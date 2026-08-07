@@ -1,6 +1,10 @@
 ---
 type: source
 source_type:
+evidence_context: public_statement
+relationship_status: research_only
+attribution: review_needed
+privacy: public
 date:
 status: processed
 organizations: []
@@ -9,6 +13,8 @@ themes: []
 claims: []
 business_uses: []
 source_url:
+source_id:
+content_hash:
 ---
 
 # Source summary
@@ -22,4 +28,3 @@ source_url:
 ## Commitments and follow-ups
 
 ## Open questions
-

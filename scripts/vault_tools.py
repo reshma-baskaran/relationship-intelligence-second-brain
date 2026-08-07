@@ -7,6 +7,21 @@ from pathlib import Path
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
 
 
+def frontmatter(text: str) -> dict[str, str]:
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---", 4)
+    if end == -1:
+        return {}
+    result: dict[str, str] = {}
+    for line in text[4:end].splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        result[key.strip()] = value.strip().strip('"')
+    return result
+
+
 def markdown_files(root: Path):
     for path in root.rglob("*.md"):
         if any(part.startswith(".") for part in path.relative_to(root).parts):
@@ -66,4 +81,3 @@ def first_markdown_table(text: str) -> list[dict[str, str]]:
         if len(cells) == len(headers):
             rows.append(dict(zip(headers, cells)))
     return rows
-

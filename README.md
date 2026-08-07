@@ -24,7 +24,12 @@ This system separates immutable sources from maintained knowledge, then turns th
 - A source and wiki architecture for Obsidian.
 - Stakeholder, source, theme, and commitment templates.
 - A structural vault linter.
-- A monthly relationship-digest generator.
+- Evidence-context and privacy linting that keeps public research separate
+  from direct relationship history.
+- A transactional local-source ingest command with stable IDs, content hashes,
+  duplicate detection, dry runs, and rollback.
+- A monthly digest that reads direct interactions, public/research sources,
+  stakeholder interests, and commitments while retaining source links.
 - The transactional contract used by the live meeting-note ingest.
 - Privacy boundaries for public and external use.
 
@@ -77,11 +82,29 @@ Lint a vault:
 python scripts/lint_vault.py /path/to/vault
 ```
 
-Generate a monthly digest from an interaction ledger:
+Ingest one permitted local source:
+
+```bash
+python scripts/ingest_source.py \
+  --vault /path/to/vault \
+  --source-file /path/to/source.md \
+  --title "Source title" \
+  --summary "One source-bounded sentence" \
+  --source-url https://example.com/source \
+  --date 2026-08-07 \
+  --source-type company_announcement \
+  --evidence-context public_statement \
+  --relationship-status research_only \
+  --privacy public \
+  --attribution confirmed \
+  --organization "Example Company"
+```
+
+Generate a monthly digest from the whole vault:
 
 ```bash
 python scripts/generate_relationship_digest.py \
-  /path/to/vault/00_System/interaction-ledger.md \
+  /path/to/vault \
   --period 2026-07 \
   --out /path/to/vault/05_Outputs/2026-07-relationship-digest.md
 ```
@@ -98,7 +121,7 @@ Andrej Karpathy described a useful pattern: immutable raw sources, an LLM-mainta
 
 This public extraction is based on an active Obsidian system with recurring
 meeting-note ingestion and monthly relationship reporting. The public code is
-connector-neutral and is now packaged as a starter kit; private data,
+connector-neutral and includes local-source ingestion; private data,
 credentials, and automation state remain local.
 
 ## Author

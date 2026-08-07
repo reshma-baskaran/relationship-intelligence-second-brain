@@ -20,3 +20,10 @@
 
 Treat a connector-backed ingest as a transaction. Fetch a stable source ID, preserve the source, update required registers, validate the writes, and only then mark the source processed. On partial failure, record a retry item rather than pretending the ingest completed.
 
+## Evidence and privacy contract
+
+Every source, interest, interaction, commitment, and output must preserve an
+evidence context, relationship status, attribution state, and privacy level.
+Public statements must remain `research_only` and cannot create interaction or
+commitment records. Run structural and evidence-context lint before marking an
+ingest successful.

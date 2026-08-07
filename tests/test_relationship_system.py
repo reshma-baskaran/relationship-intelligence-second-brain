@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 digest = load("digest", ROOT / "scripts" / "generate_relationship_digest.py")
 lint_module = load("lint_vault", ROOT / "scripts" / "lint_vault.py")
 init_module = load("init_vault", ROOT / "scripts" / "init_vault.py")
+ingest_module = load("ingest_source", ROOT / "scripts" / "ingest_source.py")
 
 
 class RelationshipSystemTests(unittest.TestCase):
@@ -59,9 +60,111 @@ class RelationshipSystemTests(unittest.TestCase):
             init_module.install_template(vault)
             ledger = vault / "00_System/interaction-ledger.md"
             with ledger.open("a", encoding="utf-8") as handle:
-                handle.write("| 2026-08-01 | Organization A | Person A | partner |  | green | Signal |  | Owner |  |\n")
+                handle.write("| 2026-08-01 | Organization A | Person A | partner | direct_interaction | active | internal | confirmed |  | green | Signal |  | Owner |  |\n")
             problems = lint_module.lint(vault)
         self.assertTrue(any("missing provenance fields: Source" in problem for problem in problems))
+
+    def test_public_source_is_research_only_and_not_an_interaction(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "pipedrive.md"
+            source.write_text("Pipedrive published a partner-program announcement.", encoding="utf-8")
+            result = ingest_module.ingest(
+                vault=vault,
+                source_file=source,
+                title="Pipedrive partner announcement",
+                summary="Pipedrive described partner expertise and customer value as ecosystem priorities.",
+                source_url="https://www.pipedrive.com/en/newsroom/example",
+                source_date="2026-03-10",
+                source_type="company_announcement",
+                evidence_context="public_statement",
+                relationship_status="research_only",
+                privacy="public",
+                attribution="confirmed",
+                organization="Pipedrive",
+            )
+            self.assertFalse(result["interaction_created"])
+            self.assertEqual([], lint_module.lint(vault))
+            rendered = digest.build_vault_digest(vault, "2026-03")
+        self.assertIn("Pipedrive", rendered)
+        self.assertIn("public_statement", rendered)
+        self.assertIn("No direct interactions", rendered)
+        self.assertIn("https://www.pipedrive.com/en/newsroom/example", rendered)
+        self.assertIn("partner expertise", rendered)
+
+    def test_public_source_cannot_claim_active_relationship(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "source.md"
+            source.write_text("Public statement", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "research_only"):
+                ingest_module.ingest(
+                    vault=vault,
+                    source_file=source,
+                    title="Public statement",
+                    summary="A bounded public statement.",
+                    source_url="https://example.com/source",
+                    source_date="2026-08-07",
+                    source_type="company_announcement",
+                    evidence_context="public_statement",
+                    relationship_status="active",
+                    privacy="public",
+                    attribution="confirmed",
+                    organization="Example",
+                )
+
+    def test_ingest_detects_duplicate_source(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "source.md"
+            source.write_text("Public statement", encoding="utf-8")
+            kwargs = dict(
+                vault=vault,
+                source_file=source,
+                title="Public statement",
+                summary="A bounded public statement.",
+                source_url="https://example.com/source",
+                source_date="2026-08-07",
+                source_type="company_announcement",
+                evidence_context="public_statement",
+                relationship_status="research_only",
+                privacy="public",
+                attribution="confirmed",
+                organization="Example",
+            )
+            ingest_module.ingest(**kwargs)
+            with self.assertRaisesRegex(ValueError, "duplicate source"):
+                ingest_module.ingest(**kwargs)
+
+    def test_ingest_rejects_invalid_source_url_before_writing(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "source.md"
+            source.write_text("Public statement", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "HTTPS"):
+                ingest_module.ingest(
+                    vault=vault,
+                    source_file=source,
+                    title="Public statement",
+                    summary="A bounded public statement.",
+                    source_url="http://x",
+                    source_date="2026-08-07",
+                    source_type="company_announcement",
+                    evidence_context="public_statement",
+                    relationship_status="research_only",
+                    privacy="public",
+                    attribution="confirmed",
+                    organization="Example",
+                )
+            self.assertEqual([], list((vault / "02_Raw Sources").glob("*.md")))
 
 
 if __name__ == "__main__":
