@@ -55,6 +55,8 @@ This system separates immutable sources from maintained knowledge, then turns th
   stakeholder interests, and commitments while retaining source links.
 - The transactional contract used by the live meeting-note ingest.
 - Privacy boundaries for public and external use.
+- A [real, anonymised monthly relationship-operations case](docs/cases/july-relationship-operations.md)
+  with seven interactions, explicit processing state, and no private note content.
 
 ## What a fork gives you
 
@@ -90,6 +92,16 @@ raw sources
 - What should the next month of engagement prioritize?
 
 The system originated in my analyst-relations work and is presented here as a broader client-and-partner relationship model.
+
+## Real operating case
+
+The [July relationship-operations case](docs/cases/july-relationship-operations.md)
+shows the active system closing a monthly period across seven real interactions.
+Six were represented in the vault; one was verified in the source system but
+still missing from the interaction ledger. The digest disclosed that gap rather
+than presenting incomplete state as complete. The public case contains only
+aggregate controls and workflow structure—not names, organisations, meeting
+content, transcripts, links, commercial outcomes, or private intelligence.
 
 ## Run the tools
 
