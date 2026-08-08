@@ -29,21 +29,25 @@ complete first-run path.
    evidence context, relationship status, privacy, and attribution.
 2. Use only these evidence contexts: `direct_interaction`, `public_statement`,
    `third_party`, or `internal`.
-3. Classify a public statement as `research_only`; never convert it into an
+3. Set `record_mode` to `production`, `simulation`, or `test_fixture`. Keep
+   simulations out of production metrics and exports.
+4. Classify a public statement as `research_only`; never convert it into an
    interaction, commitment, relationship claim, or buying signal.
-4. Preserve the raw source without rewriting it. For a local permitted source,
+5. Preserve the raw source without rewriting it. For a local permitted source,
    use `scripts/ingest_source.py` so the source receives a stable ID, hash,
    duplicate check, source-bounded summary, and source-register row. Run
-   `--dry-run` first when needed.
-5. Create or update a source summary.
-6. Separate confirmed facts, interpretation, recommendation, and unknowns.
-7. Update relevant organization, stakeholder, theme, commitment, and claim pages.
-8. Add an interaction-ledger row only for `direct_interaction` evidence.
-9. Update the stakeholder-interest register only when attribution is clear;
+   `--dry-run` first when needed. Use an HTTPS `source_url` for public or
+   third-party material. Use a stable `local://` `source_ref` for permitted
+   private notes that have no public URL.
+6. Create or update a source summary.
+7. Separate confirmed facts, interpretation, recommendation, and unknowns.
+8. Update relevant organization, stakeholder, theme, commitment, and claim pages.
+9. Add an interaction-ledger row only for `direct_interaction` evidence.
+10. Update the stakeholder-interest register only when attribution is clear;
    retain evidence context and relationship status on the row.
-10. Update the content index and source register.
-11. Append a maintenance-log entry only after lint passes.
-12. Advance automation state only after all required writes succeed.
+11. Update the content index and source register.
+12. Append a maintenance-log entry only after lint passes.
+13. Advance automation state only after all required writes succeed.
 
 For connector-neutral use, accept user-provided Markdown notes or another
 locally exported source format. Keep any Granola, Gmail, Slack, CRM, or other
@@ -67,7 +71,9 @@ For a monthly digest, use the vault root with
 `scripts/generate_relationship_digest.py <vault> --period YYYY-MM`. Keep direct
 relationship activity separate from public and market intelligence, retain
 source links, and add recurring themes, coverage gaps, next-month engagement
-priorities, and changes in relationship health.
+priorities, and changes in relationship health. Production digests exclude
+simulation and test fixtures. Use `--include-simulation` only for a separate QA
+section.
 
 ## Safety
 

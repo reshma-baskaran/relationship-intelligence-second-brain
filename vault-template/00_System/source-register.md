@@ -8,5 +8,5 @@ register: source
 Record one row for each note, transcript, report, or other source that enters
 the vault. Do not replace the source with a rewritten summary.
 
-| Source ID | Date | Source type | Evidence context | Relationship status | Privacy | Organization | Attribution | Status | Source URL | Summary | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|
+| Source ID | Date | Source type | Evidence context | Relationship status | Privacy | Record mode | Organization | Attribution | Status | Source reference | Summary | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|

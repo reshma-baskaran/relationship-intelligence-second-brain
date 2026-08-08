@@ -7,7 +7,9 @@ evidence_context: internal
 relationship_status: unknown
 privacy: internal
 attribution: review_needed
+record_mode: production
 source_url:
+source_ref:
 sources: []
 ---
 

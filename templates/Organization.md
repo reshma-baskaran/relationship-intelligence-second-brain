@@ -4,6 +4,7 @@ relationship_status: unknown
 evidence_context: internal
 privacy: internal
 attribution: review_needed
+record_mode: production
 updated:
 sources: []
 ---
@@ -17,4 +18,3 @@ sources: []
 ## Direct interaction history
 
 ## Open questions
-

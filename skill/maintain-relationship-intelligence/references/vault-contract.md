@@ -24,6 +24,12 @@ Treat a connector-backed ingest as a transaction. Fetch a stable source ID, pres
 
 Every source, interest, interaction, commitment, and output must preserve an
 evidence context, relationship status, attribution state, and privacy level.
+Every record must also preserve a `record_mode`: `production`, `simulation`, or
+`test_fixture`. Exclude non-production records from production metrics.
 Public statements must remain `research_only` and cannot create interaction or
 commitment records. Run structural and evidence-context lint before marking an
 ingest successful.
+
+Use HTTPS provenance for public and third-party sources. Use a stable
+`local://` reference plus content hash for permitted private direct or internal
+sources that do not have a web URL.

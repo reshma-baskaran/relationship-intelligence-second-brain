@@ -48,6 +48,11 @@ an interaction automatically. Use `--dry-run` to inspect the planned source ID
 and destination before writing. Supply a one-sentence `--summary` that stays
 within the source and does not invent a relationship, request, or commitment.
 
+Use an HTTPS `--source-url` for public and third-party material. For a
+permitted private direct or internal note without a web URL, use a stable
+`--source-ref local://...`. Set `--record-mode simulation` or
+`--record-mode test_fixture` for QA data; production is the default.
+
 ## 5. Open the vault in Obsidian
 
 Open the configured `vault_path` as an Obsidian vault. Start with:
@@ -83,6 +88,9 @@ The digest keeps direct relationship activity separate from public and market
 intelligence, includes stakeholder interests and open commitments, and retains
 source links. Confirm owners, dates, attribution, evidence context, and privacy
 before sharing it.
+
+Simulation and test fixtures are excluded from production metrics. Use
+`--include-simulation` only to append a separate QA section.
 
 ## What this does not do
 

@@ -6,6 +6,7 @@ relationship_status: unknown
 evidence_context: internal
 privacy: internal
 attribution: review_needed
+record_mode: production
 updated:
 confidence: medium
 sources: []

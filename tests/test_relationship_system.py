@@ -60,7 +60,7 @@ class RelationshipSystemTests(unittest.TestCase):
             init_module.install_template(vault)
             ledger = vault / "00_System/interaction-ledger.md"
             with ledger.open("a", encoding="utf-8") as handle:
-                handle.write("| 2026-08-01 | Organization A | Person A | partner | direct_interaction | active | internal | confirmed |  | green | Signal |  | Owner |  |\n")
+                handle.write("| 2026-08-01 | Organization A | Person A | partner | direct_interaction | active | internal | confirmed | production |  | green | Signal |  | Owner |  |\n")
             problems = lint_module.lint(vault)
         self.assertTrue(any("missing provenance fields: Source" in problem for problem in problems))
 
@@ -186,6 +186,91 @@ class RelationshipSystemTests(unittest.TestCase):
                     organization="Example",
                 )
             self.assertEqual([], list((vault / "02_Raw Sources").glob("*.md")))
+
+    def test_private_direct_source_accepts_local_provenance(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "meeting.md"
+            source.write_text("Permitted private meeting note.", encoding="utf-8")
+            result = ingest_module.ingest(
+                vault=vault,
+                source_file=source,
+                title="Private meeting note",
+                summary="A permitted direct interaction was captured.",
+                source_ref="local://meeting-exports/meeting-123",
+                source_date="2026-08-08",
+                source_type="meeting_note",
+                evidence_context="direct_interaction",
+                relationship_status="active",
+                privacy="restricted",
+                attribution="confirmed",
+                organization="Example",
+            )
+            self.assertEqual("production", result["record_mode"])
+            self.assertEqual([], lint_module.lint(vault))
+            page = Path(result["destination"]).read_text(encoding="utf-8")
+            self.assertIn('source_ref: "local://meeting-exports/meeting-123"', page)
+
+    def test_digest_excludes_simulation_and_normalizes_organization_names(self):
+        interactions = [
+            {"Date": "2026-08-01", "Organization": "[[Mixpanel]]", "Record mode": "production", "Health": "green", "Primary signal": "Real"},
+            {"Date": "2026-08-02", "Organization": "Mixpanel", "Record mode": "simulation", "Health": "green", "Primary signal": "SIMULATION ONLY"},
+        ]
+        sources = [
+            {"Date": "2026-08-03", "Organization": "Mixpanel", "Record mode": "production", "Evidence context": "public_statement"},
+            {"Date": "2026-08-04", "Organization": "Other", "Record mode": "test_fixture", "Evidence context": "public_statement"},
+        ]
+        rendered = digest.build_sections(
+            interactions=interactions,
+            sources=sources,
+            interests=[],
+            themes=[],
+            commitments=[],
+            period="2026-08",
+        )
+        self.assertIn("Direct interactions: 1", rendered)
+        self.assertIn("Organizations covered: 1", rendered)
+        self.assertNotIn("SIMULATION ONLY", rendered)
+        with_simulation = digest.build_sections(
+            interactions=interactions,
+            sources=sources,
+            interests=[],
+            themes=[],
+            commitments=[],
+            period="2026-08",
+            include_simulation=True,
+        )
+        self.assertIn("Simulation / QA", with_simulation)
+        self.assertIn("Simulated interactions: 1", with_simulation)
+
+    def test_lint_requires_machine_readable_simulation_mode(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            init_module.install_template(vault)
+            source = root / "simulation.md"
+            source.write_text("SIMULATION ONLY fixture.", encoding="utf-8")
+            result = ingest_module.ingest(
+                vault=vault,
+                source_file=source,
+                title="Simulation fixture",
+                summary="Simulation fixture for QA only.",
+                source_ref="local://qa/simulation-1",
+                source_date="2026-08-08",
+                source_type="meeting_note",
+                evidence_context="direct_interaction",
+                relationship_status="active",
+                privacy="restricted",
+                attribution="confirmed",
+                organization="Example",
+                record_mode="simulation",
+            )
+            page = Path(result["destination"])
+            page.write_text(page.read_text(encoding="utf-8").replace('record_mode: "simulation"', 'record_mode: "production"'), encoding="utf-8")
+            problems = lint_module.lint(vault)
+        self.assertTrue(any("simulation content" in problem for problem in problems))
 
 
 if __name__ == "__main__":

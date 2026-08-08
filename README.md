@@ -10,6 +10,22 @@ This is a reusable framework—not a hosted app and not a populated personal
 vault. Fork it, create a private vault from the blank template, and connect
 your own permitted notes.
 
+## What the system turns into memory
+
+| Input | Durable output |
+|---|---|
+| Permitted meeting note or public source | Immutable source record with stable ID and content hash |
+| Attributed stakeholder interest | Searchable interest register with evidence context |
+| Direct commitment | Owner, due date, source and open/closed state |
+| Maintained themes and recent activity | Monthly relationship digest with source links |
+
+```text
+source → history → interests → commitments → recurring brief
+```
+
+Public research remains `research_only`. Private notes can use local provenance,
+and simulations are excluded from production metrics by default.
+
 ## The problem
 
 Meeting summaries are easy to accumulate and hard to use. Important asks disappear between documents, relationship context stays with one person, follow-ups lose owners, and monthly reporting becomes a manual reconstruction exercise.
@@ -26,6 +42,10 @@ This system separates immutable sources from maintained knowledge, then turns th
 - A structural vault linter.
 - Evidence-context and privacy linting that keeps public research separate
   from direct relationship history.
+- Machine-enforced production, simulation, and test-fixture modes so QA data
+  never inflates live relationship metrics.
+- HTTPS provenance for public material and stable local provenance for private
+  permitted notes.
 - A transactional local-source ingest command with stable IDs, content hashes,
   duplicate detection, dry runs, and rollback.
 - A monthly digest that reads direct interactions, public/research sources,
@@ -100,6 +120,9 @@ python scripts/ingest_source.py \
   --organization "Example Company"
 ```
 
+For a permitted private direct note with no public URL, use
+`--source-ref local://meeting-exports/STABLE_ID` instead of inventing a URL.
+
 Generate a monthly digest from the whole vault:
 
 ```bash
@@ -108,6 +131,9 @@ python scripts/generate_relationship_digest.py \
   --period 2026-07 \
   --out /path/to/vault/05_Outputs/2026-07-relationship-digest.md
 ```
+
+Production digests exclude simulation and test fixtures. Add
+`--include-simulation` only when you want a separate QA section.
 
 ## Privacy model
 

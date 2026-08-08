@@ -9,6 +9,7 @@ evidence_context: direct_interaction
 relationship_status: active
 privacy: internal
 attribution: confirmed
+record_mode: production
 completion_proof:
 ---
 

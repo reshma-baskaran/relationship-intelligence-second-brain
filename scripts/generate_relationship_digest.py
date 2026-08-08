@@ -21,7 +21,26 @@ def _table(path: Path) -> list[dict[str, str]]:
 
 
 def _linked(label: str, url: str) -> str:
-    return f"[{label}]({url})" if url.startswith("https://") else label
+    return f"[{label}]({url})" if url.startswith("https://") else f"{label} (`{url}`)" if url else label
+
+
+def _mode(row: dict[str, str]) -> str:
+    return value(row, "Record mode", "record_mode") or "production"
+
+
+def _production(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [row for row in rows if _mode(row) == "production"]
+
+
+def _normalize_organization(raw: str) -> str:
+    text = raw.strip()
+    if text.startswith("[[") and text.endswith("]]" ):
+        text = text[2:-2]
+    if "|" in text:
+        text = text.split("|", 1)[1]
+    if "/" in text:
+        text = text.rsplit("/", 1)[-1]
+    return text.strip()
 
 
 def build_digest(rows: list[dict[str, str]], period: str) -> str:
@@ -29,11 +48,20 @@ def build_digest(rows: list[dict[str, str]], period: str) -> str:
     return build_sections(interactions=rows, sources=[], interests=[], themes=[], commitments=[], period=period)
 
 
-def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str, str]], interests: list[dict[str, str]], themes: list[dict[str, str]], commitments: list[dict[str, str]], period: str) -> str:
-    selected_interactions = [row for row in interactions if value(row, "Date").startswith(period)]
-    selected_sources = [row for row in sources if value(row, "Date").startswith(period)]
+def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str, str]], interests: list[dict[str, str]], themes: list[dict[str, str]], commitments: list[dict[str, str]], period: str, include_simulation: bool = False) -> str:
+    all_interests = interests
+    all_commitments = commitments
+    selected_interactions = _production([row for row in interactions if value(row, "Date").startswith(period)])
+    selected_sources = _production([row for row in sources if value(row, "Date").startswith(period)])
+    interests = _production(interests)
+    themes = _production(themes)
+    commitments = _production(commitments)
     health = Counter(value(row, "Health", "RAG") or "Unspecified" for row in selected_interactions)
-    organizations = sorted({value(row, "Organization", "Firm") for row in selected_interactions + selected_sources if value(row, "Organization", "Firm")})
+    organizations = sorted({
+        _normalize_organization(value(row, "Organization", "Firm"))
+        for row in selected_interactions + selected_sources
+        if _normalize_organization(value(row, "Organization", "Firm"))
+    })
     lines = [
         "---",
         "type: output",
@@ -67,7 +95,7 @@ def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str
         for row in public_sources:
             organization = value(row, "Organization") or "Unspecified organization"
             context = value(row, "Evidence context") or "unclassified"
-            source_url = value(row, "Source URL")
+            source_url = value(row, "Source reference", "Source URL")
             source_identifier = value(row, "Source ID") or "source"
             summary = value(row, "Summary") or "Source ingested; synthesis pending."
             lines.append(f"- **{organization}** · `{context}` · {_linked(source_identifier, source_url)} — {summary}")
@@ -124,10 +152,30 @@ def build_sections(*, interactions: list[dict[str, str]], sources: list[dict[str
         "- Retain source links on every externally shared claim.",
         "",
     ])
+    if include_simulation:
+        simulated_interactions = [
+            row for row in interactions
+            if value(row, "Date").startswith(period) and _mode(row) in {"simulation", "test_fixture"}
+        ]
+        simulated_sources = [
+            row for row in sources
+            if value(row, "Date").startswith(period) and _mode(row) in {"simulation", "test_fixture"}
+        ]
+        simulated_interests = [row for row in all_interests if _mode(row) in {"simulation", "test_fixture"}]
+        simulated_commitments = [row for row in all_commitments if _mode(row) in {"simulation", "test_fixture"}]
+        lines.extend([
+            "## Simulation / QA — excluded from production metrics",
+            "",
+            f"- Simulated interactions: {len(simulated_interactions)}",
+            f"- Simulated sources: {len(simulated_sources)}",
+            f"- Simulated interests: {len(simulated_interests)}",
+            f"- Simulated commitments: {len(simulated_commitments)}",
+            "",
+        ])
     return "\n".join(lines)
 
 
-def build_vault_digest(vault: Path, period: str) -> str:
+def build_vault_digest(vault: Path, period: str, *, include_simulation: bool = False) -> str:
     system = vault / "00_System"
     commitments: list[dict[str, str]] = []
     for path in (vault / "03_Wiki/commitments").glob("*.md") if (vault / "03_Wiki/commitments").exists() else []:
@@ -152,6 +200,7 @@ def build_vault_digest(vault: Path, period: str) -> str:
         themes=themes,
         commitments=commitments,
         period=period,
+        include_simulation=include_simulation,
     )
 
 
@@ -160,8 +209,9 @@ def main() -> int:
     parser.add_argument("source", type=Path, help="vault directory, or a legacy interaction-ledger path")
     parser.add_argument("--period", required=True, help="YYYY-MM")
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--include-simulation", action="store_true", help="append a separate QA-only simulation section")
     args = parser.parse_args()
-    digest = build_vault_digest(args.source, args.period) if args.source.is_dir() else build_digest(_table(args.source), args.period)
+    digest = build_vault_digest(args.source, args.period, include_simulation=args.include_simulation) if args.source.is_dir() else build_digest(_table(args.source), args.period)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(digest, encoding="utf-8")

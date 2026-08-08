@@ -19,6 +19,7 @@ ENUMS = {
     "relationship_status": {"active", "historical", "research_only", "unknown"},
     "attribution": {"confirmed", "inferred", "review_needed"},
     "privacy": {"public", "internal", "confidential", "restricted"},
+    "record_mode": {"production", "simulation", "test_fixture"},
 }
 
 
@@ -33,6 +34,21 @@ def _value(row: dict[str, str], *names: str) -> str:
 def _is_https(value: str) -> bool:
     parsed = urlparse(value)
     return parsed.scheme == "https" and bool(parsed.netloc)
+
+
+def _is_local(value: str) -> bool:
+    return value.startswith("local://") and len(value) > len("local://")
+
+
+def _check_provenance(problems: list[str], label: str, context: str, source_url: str, source_ref: str) -> None:
+    if context in {"public_statement", "third_party"} and not _is_https(source_url):
+        problems.append(f"{label} requires a valid HTTPS source_url")
+    elif context in {"direct_interaction", "internal"} and not (_is_https(source_url) or _is_local(source_ref)):
+        problems.append(f"{label} requires an HTTPS source_url or local:// source_ref")
+
+
+def _record_mode(value: str) -> str:
+    return value or "production"
 
 
 def _check_enum(problems: list[str], label: str, field: str, value: str) -> None:
@@ -63,20 +79,36 @@ def lint(root: Path) -> list[str]:
             elif len(by_stem.get(Path(normalized).stem, [])) > 1:
                 problems.append(f"ambiguous wikilink: {path.relative_to(root)} -> {target}")
         metadata = frontmatter(text)
+        if metadata.get("type") in {"source", "theme", "commitment", "stakeholder", "organization"}:
+            label = f"{metadata.get('type')} page {path.relative_to(root)}"
+            mode = _record_mode(metadata.get("record_mode", ""))
+            _check_enum(problems, label, "record_mode", mode)
+            if "simulation" in text.casefold() and mode == "production":
+                problems.append(f"{label} contains simulation content but record_mode is production")
         if metadata.get("type") == "source":
             label = f"source page {path.relative_to(root)}"
-            if not _is_https(metadata.get("source_url", "")):
-                problems.append(f"{label} lacks a valid HTTPS source_url")
-            for field in ENUMS:
+            for field in ("evidence_context", "relationship_status", "attribution", "privacy"):
                 _check_enum(problems, label, field, metadata.get(field, ""))
+            _check_provenance(
+                problems,
+                label,
+                metadata.get("evidence_context", ""),
+                metadata.get("source_url", ""),
+                metadata.get("source_ref", ""),
+            )
             if metadata.get("evidence_context") == "public_statement" and metadata.get("relationship_status") != "research_only":
                 problems.append(f"{label} public_statement must use relationship_status research_only")
         if metadata.get("type") == "theme":
             label = f"theme page {path.relative_to(root)}"
-            for field in ENUMS:
+            for field in ("evidence_context", "relationship_status", "attribution", "privacy"):
                 _check_enum(problems, label, field, metadata.get(field, ""))
-            if not _is_https(metadata.get("source_url", "")):
-                problems.append(f"{label} lacks a valid HTTPS source_url")
+            _check_provenance(
+                problems,
+                label,
+                metadata.get("evidence_context", ""),
+                metadata.get("source_url", ""),
+                metadata.get("source_ref", ""),
+            )
 
     source_register = root / "00_System/source-register.md"
     if source_register.exists():
@@ -89,10 +121,18 @@ def lint(root: Path) -> list[str]:
             elif source_id in seen_ids:
                 problems.append(f"duplicate source ID: {source_id}")
             seen_ids.add(source_id)
-            if not _is_https(_value(row, "Source URL")):
-                problems.append(f"{label} lacks a valid HTTPS Source URL")
+            context = _value(row, "Evidence context")
+            reference = _value(row, "Source reference", "Source URL")
+            _check_provenance(
+                problems,
+                label,
+                context,
+                reference if _is_https(reference) else "",
+                reference if _is_local(reference) else "",
+            )
             for field, heading in (("evidence_context", "Evidence context"), ("relationship_status", "Relationship status"), ("privacy", "Privacy"), ("attribution", "Attribution")):
                 _check_enum(problems, label, field, _value(row, heading))
+            _check_enum(problems, label, "record_mode", _record_mode(_value(row, "Record mode")))
 
     ledger = root / "00_System/interaction-ledger.md"
     if ledger.exists():
@@ -114,6 +154,10 @@ def lint(root: Path) -> list[str]:
             _check_enum(problems, label, "relationship_status", _value(row, "Relationship status"))
             _check_enum(problems, label, "privacy", _value(row, "Privacy"))
             _check_enum(problems, label, "attribution", _value(row, "Attribution"))
+            mode = _record_mode(_value(row, "Record mode"))
+            _check_enum(problems, label, "record_mode", mode)
+            if "simulation" in " ".join(row.values()).casefold() and mode == "production":
+                problems.append(f"{label} contains simulation content but record_mode is production")
             if context != "direct_interaction":
                 problems.append(f"{label} must use evidence_context direct_interaction")
 
@@ -125,6 +169,10 @@ def lint(root: Path) -> list[str]:
             label = f"stakeholder-interest row {number}"
             for field, heading in (("evidence_context", "Evidence context"), ("relationship_status", "Relationship status"), ("privacy", "Privacy"), ("attribution", "Attribution")):
                 _check_enum(problems, label, field, _value(row, heading))
+            mode = _record_mode(_value(row, "Record mode"))
+            _check_enum(problems, label, "record_mode", mode)
+            if "simulation" in " ".join(row.values()).casefold() and mode == "production":
+                problems.append(f"{label} contains simulation content but record_mode is production")
     return sorted(set(problems))
 
 
