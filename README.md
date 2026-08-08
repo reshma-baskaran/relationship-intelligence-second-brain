@@ -26,6 +26,9 @@ source → history → interests → commitments → recurring brief
 Public research remains `research_only`. Private notes can use local provenance,
 and simulations are excluded from production metrics by default.
 
+If this relationship-memory model is useful, **star the repository** to keep it
+close and help another operator discover it.
+
 ## The problem
 
 Meeting summaries are easy to accumulate and hard to use. Important asks disappear between documents, relationship context stays with one person, follow-ups lose owners, and monthly reporting becomes a manual reconstruction exercise.
@@ -36,7 +39,7 @@ This system separates immutable sources from maintained knowledge, then turns th
 
 - A 15-minute [quickstart](QUICKSTART.md) and local configuration example.
 - A blank Obsidian vault scaffold created by `scripts/init_vault.py`.
-- A reusable Codex skill for relationship-intelligence ingestion.
+- A reusable agent skill for relationship-intelligence ingestion.
 - A source and wiki architecture for Obsidian.
 - Stakeholder, source, theme, and commitment templates.
 - A structural vault linter.
